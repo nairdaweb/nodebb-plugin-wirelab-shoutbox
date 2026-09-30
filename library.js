@@ -3,7 +3,7 @@
 /*
  * nodebb-plugin-wirelab-shoutbox: server entry point.
  *
- * A small live chat for the whole forum ("Live" dock on every page and a widget), over the
+ * A small live chat for the whole forum (a dock on every page and a widget), over the
  * NodeBB websocket (socket.io). Data lives in the NodeBB database under shoutbox:* keys
  * (lib/store.js). Rules and rendering are pure modules (lib/rules.js, lib/format.js).
  *
@@ -59,12 +59,18 @@ function optionalRequire(id) {
 	}
 }
 
-/* Rank ladder of nodebb-plugin-rank-badges ("links from rank N"). Without it: posts >= 5. */
+/*
+ * Rank ladder of nodebb-plugin-rank-badges ("links from rank N"). Returns null when that plugin
+ * is not installed or not active; the post-count rule applies then (lib/rules.js canPostLinks).
+ */
 const rankLib = optionalRequire('nodebb-plugin-rank-badges/lib/ranks');
 let rankConfig = { value: null, at: 0 };
+let rankActive = { value: false, at: 0 };
 
 async function getRankLevel(fields) {
-	if (!rankLib) return (parseInt(fields.postcount, 10) || 0) >= 5 ? 2 : 1;
+	if (!rankLib || typeof rankLib.computeLevel !== 'function') return null;
+	if (Date.now() - rankActive.at > CACHE_TTL) rankActive = { value: await plugins.isActive('nodebb-plugin-rank-badges'), at: Date.now() };
+	if (!rankActive.value) return null;
 	if (!rankConfig.value || Date.now() - rankConfig.at > CACHE_TTL) {
 		rankConfig = { value: rankLib.normalize(await meta.settings.get('rank-badges')), at: Date.now() };
 	}
@@ -219,6 +225,7 @@ function state(actor, now) {
 		mute: rules.muteInfo(actor.mute, now),
 		maxLength: rules.LIMITS.maxLength,
 		requirements: { minAccountAgeHours: settings.minAccountAgeHours, minPosts: settings.minPosts },
+		title: settings.title,
 	};
 }
 
@@ -273,6 +280,11 @@ api.send = async function (socket, data) {
 	if (block) throw new Error(`[[shoutbox:error.${block}]]`);
 	const text = format.normalize(data && data.content);
 	const invalid = format.validate(text, { canLinks: rules.canPostLinks(actor, settings) });
+	if (invalid === 'links') {
+		throw new Error(actor.rankLevel === null ?
+			`[[shoutbox:error.links-posts, ${settings.linkMinPosts}]]` :
+			`[[shoutbox:error.links-rank, ${settings.linkMinRankLevel}]]`);
+	}
 	if (invalid) throw new Error(`[[shoutbox:error.${invalid}, ${rules.LIMITS.maxLength}]]`);
 	const wait = limiter.hit(actor.uid, now);
 	if (wait) throw new Error(`[[shoutbox:error.rate-limit, ${Math.ceil(wait / 1000)}]]`);
@@ -403,7 +415,7 @@ plugin.addAdminNavigation = async function (header) {
 plugin.defineWidgets = async function (widgets) {
 	widgets.push({
 		widget: 'shoutbox',
-		name: 'Shoutbox (Live)',
+		name: 'Shoutbox',
 		description: 'Latest shoutbox messages; opens the live dock.',
 		content: '<p class="form-text">[[shoutbox:widget.acp-help]]</p>',
 	});
@@ -421,6 +433,7 @@ plugin.renderWidget = async function (widget) {
 	const messages = await serialize(msgs, uid);
 	const html = await widget.req.app.renderAsync('widgets/shoutbox', {
 		messages,
+		titleHtml: settings.title ? format.escapeHtml(settings.title).replace(/\[/g, '&lsqb;').replace(/\]/g, '&rsqb;') : '',
 		config: { relative_path: nconf.get('relative_path') || '' },
 	});
 	const locals = (widget.res && widget.res.locals && widget.res.locals.config) || {};

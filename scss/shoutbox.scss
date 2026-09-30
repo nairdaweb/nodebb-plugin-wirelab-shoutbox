@@ -1,6 +1,7 @@
-// Shoutbox "Live": launcher, dock (desktop/tablet), bottom sheet (phones) and widget.
-// Colours come from the theme: wirelab tokens (--wl-*) when present, Bootstrap otherwise,
-// so light and dark mode follow data-bs-theme.
+// Shoutbox: launcher, dock (desktop/tablet), bottom sheet (phones) and widget.
+// Colours come from Bootstrap variables, so light and dark mode follow data-bs-theme.
+// Themes can override any --sb-* property below; optional theme tokens (--wl-*) are read
+// first when a theme defines them.
 
 .sb-root,
 .sb-widget {

@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * Shoutbox client: the "Live" dock (every page), the bottom sheet on phones and the widget.
+ * Shoutbox client: the dock (every page), the bottom sheet on phones and the widget.
  *
  * Talks to the server only over the NodeBB websocket (plugins.shoutbox.*). Messages arrive
  * as HTML already rendered and sanitised by the server (lib/format.js); this file never turns
@@ -229,6 +229,9 @@
 	async function applyState(st) {
 		S.state = st;
 		if (!els) return;
+		// Custom name from the ACP (plain text), or the translated default from the template.
+		els.title.textContent = st.title || els.defaultTitle;
+		els.launcher.title = st.title || els.defaultTitle;
 		els.form.hidden = !st.canWrite;
 		els.blocked.hidden = !!st.canWrite;
 		if (!st.canWrite) {
@@ -680,7 +683,9 @@
 			count: q('[data-sb-count]'),
 			mentions: q('[data-sb-mentions]'),
 			emoji: q('[data-sb-emoji]'),
+			title: q('#sb-title'),
 		};
+		els.defaultTitle = els.title.textContent;
 
 		els.launcher.addEventListener('click', function () {
 			if (S.open) closeDock(); else openDock(els.launcher);

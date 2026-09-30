@@ -1,5 +1,5 @@
 <!--
-	ACP page of nodebb-plugin-wirelab-shoutbox (route in library.js). Settings are saved by
+	ACP page of the shoutbox plugin (route in library.js). Settings are saved by
 	NodeBB's settings module under the "shoutbox" hash (public/admin.js).
 -->
 <div class="acp-page-container">
@@ -11,23 +11,36 @@
 			<p class="text-muted mb-0">{{tx("shoutbox:acp.privileges")}}</p>
 
 			<form role="form" class="shoutbox-settings">
+				<h5 class="fw-bold">{{tx("shoutbox:acp.display")}}</h5>
+				<div class="mb-4">
+					<label class="form-label" for="sb-title">{{tx("shoutbox:acp.title")}}</label>
+					<input type="text" maxlength="{limits.titleMaxLength}" class="form-control" id="sb-title" name="title" placeholder="{{tx("shoutbox:title")}}" aria-describedby="sb-title-help">
+					<p class="form-text" id="sb-title-help">{{tx("shoutbox:acp.title-help")}}</p>
+				</div>
 				<h5 class="fw-bold">{{tx("shoutbox:acp.settings")}}</h5>
 				<div class="form-check form-switch mb-3">
 					<input type="checkbox" class="form-check-input" id="sb-require-email" name="requireEmail" checked>
 					<label for="sb-require-email" class="form-check-label">{{tx("shoutbox:acp.require-email")}}</label>
 				</div>
 				<div class="row g-3 mb-3">
-					<div class="col-12 col-md-4">
+					<div class="col-12 col-md-6">
 						<label class="form-label" for="sb-min-age">{{tx("shoutbox:acp.min-age")}}</label>
 						<input type="number" min="0" step="1" class="form-control" id="sb-min-age" name="minAccountAgeHours" placeholder="24">
 					</div>
-					<div class="col-12 col-md-4">
+					<div class="col-12 col-md-6">
 						<label class="form-label" for="sb-min-posts">{{tx("shoutbox:acp.min-posts")}}</label>
 						<input type="number" min="0" step="1" class="form-control" id="sb-min-posts" name="minPosts" placeholder="1">
 					</div>
-					<div class="col-12 col-md-4">
+				</div>
+				<h5 class="fw-bold">{{tx("shoutbox:acp.links")}}</h5>
+				<div class="row g-3 mb-3">
+					<div class="col-12 col-md-6">
 						<label class="form-label" for="sb-link-rank">{{tx("shoutbox:acp.link-rank")}}</label>
 						<input type="number" min="0" step="1" class="form-control" id="sb-link-rank" name="linkMinRankLevel" placeholder="2">
+					</div>
+					<div class="col-12 col-md-6">
+						<label class="form-label" for="sb-link-posts">{{tx("shoutbox:acp.link-posts")}}</label>
+						<input type="number" min="0" step="1" class="form-control" id="sb-link-posts" name="linkMinPosts" placeholder="5">
 					</div>
 				</div>
 				<h5 class="fw-bold">{{tx("shoutbox:acp.rate")}}</h5>

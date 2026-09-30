@@ -24,6 +24,8 @@ test('normalizeSettings: defaults and bounds', () => {
 	assert.equal(s.minPosts, 1);
 	assert.equal(s.linkMinRankLevel, 3);
 	assert.equal(s.rateBurst, 1);
+	assert.equal(rules.normalizeSettings({ title: '  Chat\n  room  ' }).title, 'Chat room');
+	assert.equal(rules.normalizeSettings({ title: 'x'.repeat(60) }).title.length, rules.LIMITS.titleMaxLength);
 });
 
 test('writeBlockReason: account requirements', () => {
@@ -68,6 +70,13 @@ test('canPostLinks: from rank level, moderators always', () => {
 	assert.equal(rules.canPostLinks({ rankLevel: 2 }, settings), true);
 	assert.equal(rules.canPostLinks({ rankLevel: 0, isModerator: true }, settings), true);
 	assert.equal(rules.canPostLinks({ rankLevel: 0 }, rules.normalizeSettings({ linkMinRankLevel: 0 })), true);
+});
+
+test('canPostLinks: from post count without rank badges', () => {
+	assert.equal(rules.canPostLinks({ rankLevel: null, postcount: 4 }, settings), false);
+	assert.equal(rules.canPostLinks({ rankLevel: null, postcount: 5 }, settings), true);
+	assert.equal(rules.canPostLinks({ rankLevel: null, postcount: 0 }, rules.normalizeSettings({ linkMinPosts: 0 })), true);
+	assert.equal(rules.canPostLinks({ rankLevel: null, postcount: 0, isModerator: true }, settings), true);
 });
 
 test('RateLimiter: minimum interval and burst window', () => {
