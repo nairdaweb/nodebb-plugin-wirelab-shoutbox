@@ -1,5 +1,5 @@
 {{{ each messages }}}
-<li class="sb-msg{{{ if ./deleted }}} sb-msg--deleted{{{ end }}}{{{ if ./mentionsMe }}} sb-msg--me{{{ end }}}" data-mid="{./mid}" data-uid="{./uid}" data-ts="{./timestamp}" data-username="{./user.username}">
+<li class="sb-msg{{{ if ./deleted }}} sb-msg--deleted{{{ end }}}{{{ if ./mentionsMe }}} sb-msg--me{{{ end }}}" data-mid="{./mid}" data-uid="{./uid}" data-ts="{./timestamp}" data-username="{./user.username}" data-userslug="{./user.userslug}">
 	<a class="sb-msg__avatar" href="{config.relative_path}/user/{./user.userslug}" tabindex="-1" aria-hidden="true">{{buildAvatar(./user, "28px", true)}}</a>
 	<div class="sb-msg__body">
 		<div class="sb-msg__head">

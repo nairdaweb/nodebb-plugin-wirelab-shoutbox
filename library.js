@@ -33,7 +33,7 @@ const SETTINGS_KEY = 'shoutbox';
 const ROOM = 'shoutbox';
 const PRIVS = ['shoutbox:read', 'shoutbox:write', 'shoutbox:moderate'];
 const PRUNE_EVERY = 10 * 60 * 1000;
-const RANK_TTL = 60 * 1000;
+const CACHE_TTL = 60 * 1000;
 
 const plugin = module.exports;
 
@@ -65,7 +65,7 @@ let rankConfig = { value: null, at: 0 };
 
 async function getRankLevel(fields) {
 	if (!rankLib) return (parseInt(fields.postcount, 10) || 0) >= 5 ? 2 : 1;
-	if (!rankConfig.value || Date.now() - rankConfig.at > RANK_TTL) {
+	if (!rankConfig.value || Date.now() - rankConfig.at > CACHE_TTL) {
 		rankConfig = { value: rankLib.normalize(await meta.settings.get('rank-badges')), at: Date.now() };
 	}
 	const cfg = rankConfig.value;
@@ -77,7 +77,7 @@ let emojiActive = { value: false, at: 0 };
 
 async function parseEmoji(html) {
 	if (!emojiLib || !emojiLib.parse || typeof emojiLib.parse.raw !== 'function') return html;
-	if (Date.now() - emojiActive.at > RANK_TTL) emojiActive = { value: await plugins.isActive('nodebb-plugin-emoji'), at: Date.now() };
+	if (Date.now() - emojiActive.at > CACHE_TTL) emojiActive = { value: await plugins.isActive('nodebb-plugin-emoji'), at: Date.now() };
 	if (!emojiActive.value) return html;
 	try {
 		return await emojiLib.parse.raw(html);
@@ -197,6 +197,11 @@ function emit(event, data) {
 	if (websockets.server) websockets.server.in(ROOM).emit(event, data);
 }
 
+/** Tells every tab of one user to reload its state (after a mute or unmute). */
+function refresh(uid) {
+	if (websockets.server) websockets.server.in(`uid_${uid}`).emit('event:shoutbox.refresh');
+}
+
 async function onlineCount() {
 	const cutoff = (parseInt(meta.config.onlineCutoff, 10) || 30) * 60 * 1000;
 	return db.sortedSetCount('users:online', Date.now() - cutoff, '+inf');
@@ -220,8 +225,6 @@ function state(actor, now) {
 // ---------------------------------------------------------------- socket API
 
 async function mentionNotify(msg, actor, text) {
-	const slugs = format.extractMentions(text);
-	if (!slugs.length) return;
 	const map = await resolveMentions([text]);
 	let uids = [...map.values()].map(u => parseInt(u.uid, 10)).filter(uid => uid !== actor.uid);
 	if (!uids.length) return;
@@ -316,15 +319,18 @@ api.mute = async function (socket, data) {
 	await store.setMute(target.uid, Object.assign({ by: actor.uid, at: now }, mute));
 	await store.log({ action: 'mute', uid: target.uid, by: actor.uid, duration: mute.duration, until: mute.until, reason: mute.reason, at: now });
 	emit('event:shoutbox.muted', { uid: target.uid, username: target.displayname, duration: mute.duration, reason: mute.reason });
-	websockets.in(`uid_${target.uid}`).emit('event:shoutbox.refresh');
+	refresh(target.uid);
 };
 
+/** Works for deleted accounts too, so their permanent mutes can still be cleared in the ACP. */
 async function unmute(actorUid, targetUid) {
-	const target = await targetOf(targetUid);
-	await store.removeMute(target.uid);
-	await store.log({ action: 'unmute', uid: target.uid, by: actorUid });
-	emit('event:shoutbox.unmuted', { uid: target.uid, username: target.displayname });
-	websockets.in(`uid_${target.uid}`).emit('event:shoutbox.refresh');
+	const uid = parseInt(targetUid, 10) || 0;
+	if (!(uid > 0)) throw new Error('[[error:invalid-data]]');
+	const fields = await user.getUserFields(uid, ['username', 'displayname']);
+	await store.removeMute(uid);
+	await store.log({ action: 'unmute', uid, by: actorUid });
+	emit('event:shoutbox.unmuted', { uid, username: fields.displayname || fields.username || '?' });
+	refresh(uid);
 }
 
 api.unmute = async function (socket, data) {
@@ -367,7 +373,7 @@ async function renderAdmin(req, res) {
 			uid: m.uid,
 			user: who(m.uid),
 			by: who(m.by),
-			reason: m.reason,
+			reason: format.escapeHtml(m.reason || ''),
 			permanent: parseInt(m.until, 10) === 0,
 			untilISO: parseInt(m.until, 10) ? new Date(parseInt(m.until, 10)).toISOString() : '',
 			duration: m.duration,
@@ -379,8 +385,8 @@ async function renderAdmin(req, res) {
 			isDelete: l.action === 'delete',
 			user: who(l.uid),
 			by: who(l.by),
-			reason: l.reason || '',
-			duration: l.duration || '',
+			reason: format.escapeHtml(l.reason || ''),
+			duration: format.escapeHtml(l.duration || ''),
 			atISO: new Date(parseInt(l.at, 10)).toISOString(),
 		})),
 		logCount,
@@ -390,10 +396,6 @@ async function renderAdmin(req, res) {
 plugin.addAdminNavigation = async function (header) {
 	header.plugins.push({ route: '/plugins/shoutbox', icon: 'fa-comments', name: 'Shoutbox' });
 	return header;
-};
-
-plugin.onSettingsSet = async function (data) {
-	if (data && data.plugin === SETTINGS_KEY) await loadSettings();
 };
 
 // ---------------------------------------------------------------- widget

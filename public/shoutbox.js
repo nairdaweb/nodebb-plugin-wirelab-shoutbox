@@ -14,6 +14,8 @@
 (function () {
 	const PHONE = window.matchMedia('(max-width: 575.98px)');
 	const GROUP_MS = 5 * 60 * 1000;
+	const PAGE_SIZE = 50;
+	const KEEP = 500;
 
 	const S = {
 		booted: false,
@@ -73,6 +75,11 @@
 		});
 	}
 
+	/** NodeBB sends usernames HTML-escaped; this gives the plain text back (for textContent). */
+	function decodeHtml(s) {
+		return new DOMParser().parseFromString(String(s || ''), 'text/html').body.textContent;
+	}
+
 	function alertError(err) {
 		require(['alerts'], function (alerts) { alerts.error(err); });
 	}
@@ -113,7 +120,9 @@
 
 	async function dayLabel(ts) {
 		const today = dayKey(Date.now());
-		const yesterday = dayKey(Date.now() - 86400000);
+		const y = new Date();
+		y.setDate(y.getDate() - 1);
+		const yesterday = dayKey(y.getTime());
 		const key = dayKey(ts);
 		if (key === today) return trText('today');
 		if (key === yesterday) return trText('yesterday');
@@ -137,6 +146,15 @@
 	/** Day separators and "continued" messages (same author within 5 min, no separator between). */
 	async function layoutList() {
 		const list = els.list;
+		// Labels are resolved first; the DOM is then rebuilt without awaiting, so two calls
+		// running at once (two messages in a row) cannot interleave and double the separators.
+		const labels = {};
+		await Promise.all(Array.prototype.map.call(list.querySelectorAll('.sb-msg'), function (li) {
+			const ts = parseInt(li.getAttribute('data-ts'), 10);
+			const key = dayKey(ts);
+			if (!labels[key]) labels[key] = dayLabel(ts).then(function (text) { labels[key] = text; });
+			return labels[key];
+		}));
 		list.querySelectorAll('.sb-day').forEach(function (el) { el.remove(); });
 		let prev = null;
 		const items = Array.prototype.slice.call(list.querySelectorAll('.sb-msg'));
@@ -147,7 +165,7 @@
 				const sep = document.createElement('li');
 				sep.className = 'sb-day';
 				sep.setAttribute('aria-hidden', 'true');
-				sep.textContent = await dayLabel(ts);
+				sep.textContent = typeof labels[dayKey(ts)] === 'string' ? labels[dayKey(ts)] : '';
 				li.parentNode.insertBefore(sep, li);
 			}
 			const cont = !newDay && prev && prev.classList.contains('sb-msg') &&
@@ -170,11 +188,19 @@
 		els.newpill.hidden = true;
 	}
 
+	/** Rendered messages minus those already in the list (an event racing a reload or a page). */
+	function withoutShown($nodes) {
+		return $nodes.filter(function () {
+			return !this.matches || !this.matches('.sb-msg') ||
+				!els.list.querySelector('.sb-msg[data-mid="' + this.getAttribute('data-mid') + '"]');
+		});
+	}
+
 	async function appendMessages(messages, opts) {
 		if (!messages.length) return;
 		const stick = (opts && opts.forceBottom) || nearBottom();
 		const html = await renderMessages(messages);
-		$(els.list).append(html);
+		$(els.list).append(withoutShown(html));
 		await layoutList();
 		if (stick) scrollToBottom(); else els.newpill.hidden = false;
 	}
@@ -184,12 +210,12 @@
 		const sc = els.scroll;
 		const before = sc.scrollHeight;
 		const html = await renderMessages(messages);
-		$(els.list).prepend(html);
+		$(els.list).prepend(withoutShown(html));
 		await layoutList();
 		sc.scrollTop += sc.scrollHeight - before;
 	}
 
-	async function addSystemLine(text) {
+	function addSystemLine(text) {
 		const li = document.createElement('li');
 		li.className = 'sb-system';
 		li.textContent = text;
@@ -429,7 +455,7 @@
 			li.className = 'sb-mentions__opt';
 			const name = document.createElement('span');
 			name.className = 'sb-mentions__name';
-			name.textContent = u.displayname || u.username;
+			name.textContent = decodeHtml(u.displayname || u.username);
 			const slug = document.createElement('span');
 			slug.className = 'sb-mentions__slug';
 			slug.textContent = '@' + u.userslug;
@@ -445,7 +471,11 @@
 	function onMentionInput() {
 		clearTimeout(S.mention.timer);
 		const q = mentionQuery();
-		if (!q) { closeMentions(); return; }
+		if (!q) {
+			S.mention.seq += 1; // drop a search still in flight
+			closeMentions();
+			return;
+		}
 		S.mention.start = q.start;
 		const seq = ++S.mention.seq;
 		S.mention.timer = setTimeout(function () {
@@ -468,8 +498,7 @@
 		if (!m) return;
 		const act = btn.getAttribute('data-sb-act');
 		if (act === 'reply') {
-			const slug = (m.li.querySelector('.sb-msg__name') || {}).getAttribute ? m.li.querySelector('.sb-msg__name').getAttribute('href').split('/').pop() : m.username;
-			insertText('@' + decodeURIComponent(slug) + ' ');
+			insertText('@' + (m.li.getAttribute('data-userslug') || m.username) + ' ');
 		} else if (act === 'delete') {
 			const question = await tr('delete-confirm');
 			require(['bootbox'], function (bootbox) {
@@ -573,9 +602,22 @@
 
 	// ------------------------------------------------------------ socket events
 
+	/** Keeps at most KEEP messages in memory and in the list; older ones can be loaded again. */
+	function trimOld() {
+		if (S.messages.length <= KEEP) return;
+		const dropped = S.messages.splice(0, S.messages.length - KEEP);
+		if (!els) return;
+		dropped.forEach(function (x) {
+			const li = els.list.querySelector('.sb-msg[data-mid="' + x.mid + '"]');
+			if (li) li.remove();
+		});
+		els.more.hidden = false;
+		els.nomore.hidden = true;
+	}
+
 	function onMessage(msg) {
 		S.messages.push(msg);
-		if (S.messages.length > 500) S.messages.splice(0, S.messages.length - 500);
+		trimOld();
 		appendMessages([msg], { forceBottom: msg.uid === myUid() });
 		renderWidgets();
 		if (!S.open && msg.uid !== myUid()) {
@@ -602,13 +644,11 @@
 	}
 
 	async function onMuted(data) {
-		addSystemLine(await trText('muted-event', [data.username, await trText('duration.' + data.duration), data.reason]));
-		if (data.uid === myUid()) refreshState();
+		addSystemLine(await trText('muted-event', [decodeHtml(data.username), await trText('duration.' + data.duration), data.reason]));
 	}
 
 	async function onUnmuted(data) {
-		addSystemLine(await trText('unmuted-event', [data.username]));
-		if (data.uid === myUid()) refreshState();
+		addSystemLine(await trText('unmuted-event', [decodeHtml(data.username)]));
 	}
 
 	// ------------------------------------------------------------ boot
@@ -718,7 +758,7 @@
 			const older = await emit('loadMore', { before: S.messages[0].mid });
 			S.messages = older.concat(S.messages);
 			await prependMessages(older);
-			if (older.length < 50) {
+			if (older.length < PAGE_SIZE) {
 				els.more.hidden = true;
 				els.nomore.hidden = false;
 			}
@@ -742,7 +782,8 @@
 		await applyState(data.state);
 		await appendMessages(data.messages, { forceBottom: true });
 		els.empty.hidden = data.messages.length > 0;
-		els.more.hidden = data.messages.length < 50;
+		els.more.hidden = data.messages.length < PAGE_SIZE;
+		els.nomore.hidden = true;
 		setOnline(data.online);
 		renderWidgets();
 	}
