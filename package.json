@@ -1,0 +1,46 @@
+{
+  "name": "nodebb-plugin-wirelab-shoutbox",
+  "version": "1.0.0",
+  "description": "Live shoutbox for NodeBB 4: a dock on every page (bottom sheet on phones) and a widget, over the NodeBB websocket. Global read/write/moderate privileges, mutes with a log, mentions with notifications, emoji, plain text with inline markdown and autolinks.",
+  "main": "library.js",
+  "license": "MIT",
+  "author": "nairda <nairda@wirelab.pl> (https://wirelab.pl)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox.git"
+  },
+  "keywords": [
+    "nodebb",
+    "plugin",
+    "nodebb-plugin",
+    "shoutbox",
+    "chat",
+    "live"
+  ],
+  "nbbpm": {
+    "compatibility": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "library.js",
+    "plugin.json",
+    "lib/",
+    "public/",
+    "scss/",
+    "templates/",
+    "languages/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0"
+  }
+}
