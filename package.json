@@ -1,13 +1,17 @@
 {
   "name": "nodebb-plugin-wirelab-shoutbox",
   "version": "1.0.0",
-  "description": "Live shoutbox for NodeBB 4: a dock on every page (bottom sheet on phones) and a widget, over the NodeBB websocket. Global read/write/moderate privileges, mutes with a log, mentions with notifications, emoji, plain text with inline markdown and autolinks.",
+  "description": "Live shoutbox for NodeBB 4: a dock on every page (bottom sheet on phones) and a widget over the NodeBB websocket. Global read/write/moderate privileges, writing rules, mutes with a moderation log, mentions with notifications, emoji, optional rank-badges integration; translated (en-GB, pl).",
   "main": "library.js",
   "license": "MIT",
-  "author": "nairda <nairda@wirelab.pl> (https://wirelab.pl)",
+  "author": "nairda (https://wirelab.pl)",
+  "homepage": "https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/issues"
   },
   "keywords": [
     "nodebb",
@@ -15,10 +19,13 @@
     "nodebb-plugin",
     "shoutbox",
     "chat",
-    "live"
+    "live-chat",
+    "widget",
+    "websocket",
+    "moderation"
   ],
   "nbbpm": {
-    "compatibility": "^4.0.0"
+    "compatibility": "^4.15.0"
   },
   "engines": {
     "node": ">=22"
@@ -32,6 +39,7 @@
     "templates/",
     "languages/",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
