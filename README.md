@@ -11,6 +11,7 @@ moderation log and mentions with notifications.
 ![The shoutbox dock with message actions and a mute notice](https://raw.githubusercontent.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/main/docs/screenshot-dock.png)
 ![The widget with the latest messages](https://raw.githubusercontent.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/main/docs/screenshot-widget.png)
 ![The bottom sheet on a phone, dark theme](https://raw.githubusercontent.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/main/docs/screenshot-mobile-dark.png)
+![The moderation panel with active mutes and the log](https://raw.githubusercontent.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/main/docs/screenshot-acp-mutes.png)
 
 *Screenshots in Polish, with a custom theme; the chat is called "Na żywo", the Polish default name.*
 
