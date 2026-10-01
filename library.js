@@ -10,6 +10,8 @@
  * Global privileges: shoutbox:read, shoutbox:write, shoutbox:moderate (ACP → Privileges).
  */
 
+const { rateLimit } = require('express-rate-limit');
+
 const nconf = require.main.require('nconf');
 const winston = require.main.require('winston');
 const meta = require.main.require('./src/meta');
@@ -29,7 +31,7 @@ const rules = require('./lib/rules');
 const format = require('./lib/format');
 const store = require('./lib/store');
 const collapse = require('./lib/collapse');
-const { createLimiter } = require('./lib/ratelimit');
+const { BASE_OPTIONS: RATE_LIMIT, onPageLimit } = require('./lib/rate-limit');
 
 const SETTINGS_KEY = 'shoutbox';
 const ROOM = 'shoutbox';
@@ -374,10 +376,10 @@ api.searchUsers = async function (socket, data) {
 // ---------------------------------------------------------------- ACP
 
 /*
- * Request limit of the ACP page per user, counted in memory by each NodeBB process
- * (lib/ratelimit.js): the page reads the active mutes and the moderation log.
+ * Request limit of the ACP page: 60 per minute and user, with express-rate-limit
+ * (lib/rate-limit.js). The page reads the active mutes and the moderation log.
  */
-const adminPageLimit = createLimiter({ windowMs: 60 * 1000, max: 60 });
+const adminPageLimit = rateLimit({ ...RATE_LIMIT, limit: 60, handler: onPageLimit });
 
 async function renderAdmin(req, res) {
 	const now = Date.now();
