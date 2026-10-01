@@ -29,6 +29,7 @@ const rules = require('./lib/rules');
 const format = require('./lib/format');
 const store = require('./lib/store');
 const collapse = require('./lib/collapse');
+const { createLimiter } = require('./lib/ratelimit');
 
 const SETTINGS_KEY = 'shoutbox';
 const ROOM = 'shoutbox';
@@ -372,6 +373,12 @@ api.searchUsers = async function (socket, data) {
 
 // ---------------------------------------------------------------- ACP
 
+/*
+ * Request limit of the ACP page per user, counted in memory by each NodeBB process
+ * (lib/ratelimit.js): the page reads the active mutes and the moderation log.
+ */
+const adminPageLimit = createLimiter({ windowMs: 60 * 1000, max: 60 });
+
 async function renderAdmin(req, res) {
 	const now = Date.now();
 	const [mutes, log, logCount] = await Promise.all([store.getActiveMutes(now), store.getLog(0, 99), store.countLog()]);
@@ -451,7 +458,7 @@ plugin.addHeadScript = async function (data) {
 // ---------------------------------------------------------------- start
 
 plugin.init = async function ({ router }) {
-	routeHelpers.setupAdminPageRoute(router, '/admin/plugins/shoutbox', [], renderAdmin);
+	routeHelpers.setupAdminPageRoute(router, '/admin/plugins/shoutbox', [adminPageLimit], renderAdmin);
 	await loadSettings();
 	pubsub.on(`action:settings.set.${SETTINGS_KEY}`, () => loadSettings().catch(err => winston.warn(`[shoutbox] settings: ${err.message}`)));
 	await ensureDefaultPrivileges();

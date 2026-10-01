@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] - 2026-10-01
+
+### Security
+- The ACP page (active mutes and moderation log) is limited to 60 loads per minute per user,
+  counted in memory without new dependencies (`lib/ratelimit.js`); above that the answer is `429`
+  with `Retry-After`. Finding reported by Snyk Code (CWE-770).
+
 ## [1.1.0] - 2026-10-01
 
 ### Added
@@ -36,5 +43,6 @@ First release. Requires NodeBB 4.15 or newer and Node.js 22 or newer.
 - Accessible dock and mention list; reduced motion respected; colours as `--sb-*` custom properties.
 - en-GB and pl translations.
 
+[1.1.1]: https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/releases/tag/v1.0.0
