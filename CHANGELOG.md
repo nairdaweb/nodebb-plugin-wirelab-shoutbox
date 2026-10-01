@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-10-01
+
+### Added
+- The widget can be collapsed (*Collapse chat* / *Show chat*). When it is the only widget in the
+  sidebar, the sidebar column disappears on large screens and the page takes the full width, with a
+  narrow tab to bring it back; next to other widgets and on phones it folds to one line.
+- The state is remembered in `localStorage` and applied before the first paint by a small inline
+  script in `<head>` (no layout jump); `aria-expanded` / `aria-controls`, reduced motion respected.
+- en-GB and pl strings `widget.collapse`, `widget.expand`.
+
 ## [1.0.0] - 2026-10-01
 
 First release. Requires NodeBB 4.15 or newer and Node.js 22 or newer.
@@ -26,4 +36,5 @@ First release. Requires NodeBB 4.15 or newer and Node.js 22 or newer.
 - Accessible dock and mention list; reduced motion respected; colours as `--sb-*` custom properties.
 - en-GB and pl translations.
 
+[1.1.0]: https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nairdaweb/nodebb-plugin-wirelab-shoutbox/releases/tag/v1.0.0

@@ -28,6 +28,7 @@ const routeHelpers = require.main.require('./src/routes/helpers');
 const rules = require('./lib/rules');
 const format = require('./lib/format');
 const store = require('./lib/store');
+const collapse = require('./lib/collapse');
 
 const SETTINGS_KEY = 'shoutbox';
 const ROOM = 'shoutbox';
@@ -439,6 +440,12 @@ plugin.renderWidget = async function (widget) {
 	const locals = (widget.res && widget.res.locals && widget.res.locals.config) || {};
 	widget.html = await translator.translate(html, locals.userLang || meta.config.defaultLang || 'en-GB');
 	return widget;
+};
+
+/** Puts the collapsed state of the widget on <html> before the first paint (lib/collapse.js). */
+plugin.addHeadScript = async function (data) {
+	collapse.injectHeadScript(data.templateData);
+	return data;
 };
 
 // ---------------------------------------------------------------- start

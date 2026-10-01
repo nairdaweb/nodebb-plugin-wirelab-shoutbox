@@ -603,6 +603,71 @@
 		});
 	}
 
+	// ------------------------------------------------------------ widget: collapse
+
+	// Same key and class as lib/collapse.js, whose inline <head> script applies them before the
+	// first paint. The theme-independent CSS (scss/shoutbox.scss) does the rest: the widget folds
+	// to one line, and the sidebar column turns into a narrow tab when the widget is alone there.
+	const COLLAPSE_KEY = 'sb:widget-collapsed';
+	const COLLAPSED = 'sb-collapsed';
+
+	function isCollapsed() {
+		return document.documentElement.classList.contains(COLLAPSED);
+	}
+
+	function storedCollapsed() {
+		try {
+			return localStorage.getItem(COLLAPSE_KEY) === '1';
+		} catch {
+			return null; // storage blocked: keep whatever the page has
+		}
+	}
+
+	function syncCollapse() {
+		const collapsed = isCollapsed();
+		document.querySelectorAll('[data-sb-collapse]').forEach(function (btn) {
+			btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+			const label = btn.getAttribute(collapsed ? 'data-label-expand' : 'data-label-collapse');
+			if (label) btn.title = label;
+		});
+	}
+
+	function setCollapsed(collapsed, animate) {
+		const root = document.documentElement;
+		if (animate) {
+			root.classList.add('sb-collapse-anim');
+			clearTimeout(S.collapseTimer);
+			S.collapseTimer = setTimeout(function () { root.classList.remove('sb-collapse-anim'); }, 400);
+		}
+		root.classList.toggle(COLLAPSED, collapsed);
+		syncCollapse();
+	}
+
+	function toggleCollapse(btn) {
+		const collapsed = !isCollapsed();
+		try {
+			if (collapsed) localStorage.setItem(COLLAPSE_KEY, '1');
+			else localStorage.removeItem(COLLAPSE_KEY);
+		} catch { /* private mode: remember for this page only */ }
+		setCollapsed(collapsed, true);
+		// The button stays in place in every layout; keep focus on it after the reflow.
+		btn.focus({ preventScroll: true });
+	}
+
+	// Themes that do not print the custom HTML slot: apply the stored state as early as we can.
+	if (storedCollapsed() && !isCollapsed()) setCollapsed(true, false);
+	syncCollapse();
+
+	document.addEventListener('click', function (ev) {
+		const btn = ev.target.closest && ev.target.closest('[data-sb-collapse]');
+		if (btn) toggleCollapse(btn);
+	});
+
+	// Another tab changed it.
+	window.addEventListener('storage', function (ev) {
+		if (ev.key === COLLAPSE_KEY) setCollapsed(ev.newValue === '1', false);
+	});
+
 	// ------------------------------------------------------------ socket events
 
 	/** Keeps at most KEEP messages in memory and in the list; older ones can be loaded again. */
@@ -840,7 +905,9 @@
 
 	require(['hooks'], function (hooks) {
 		hooks.on('action:app.load', boot);
+		hooks.on('action:widgets.loaded', syncCollapse);
 		hooks.on('action:ajaxify.end', function () {
+			syncCollapse();
 			if (!S.booted) { boot(); return; }
 			renderWidgets();
 			checkOpenParam();

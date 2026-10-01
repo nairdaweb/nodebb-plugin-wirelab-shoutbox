@@ -587,11 +587,13 @@ html.sb-sheet-open body {
 // ---------------------------------------------------------------- widget (S1)
 
 .sb-widget {
+	position: relative;
 	padding: 14px 16px 16px;
 	border: 1px solid var(--sb-line);
 	border-radius: var(--sb-radius);
 	background: var(--sb-bg);
 	color: var(--sb-ink);
+	transition: padding .2s ease, background-color .15s ease;
 }
 
 .sb-widget__head {
@@ -599,6 +601,7 @@ html.sb-sheet-open body {
 	align-items: center;
 	gap: 8px;
 	margin-bottom: 8px;
+	transition: margin .2s ease;
 }
 
 .sb-widget__icon { color: var(--sb-accent); }
@@ -650,4 +653,158 @@ html.sb-sheet-open body {
 
 .sb-widget__open {
 	width: 100%;
+}
+
+// ---------------------------------------------------------------- widget: collapse
+// html.sb-collapsed is set before the first paint (lib/collapse.js) and by public/shoutbox.js.
+
+.sb-widget__toggle {
+	display: inline-grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	flex: 0 0 auto;
+	margin: -6px -8px -6px 0;
+	padding: 0;
+	border: 0;
+	border-radius: 10px;
+	background: transparent;
+	color: var(--sb-muted);
+	font-size: .8rem;
+
+	&:hover { background: var(--sb-tint); color: var(--sb-ink); }
+	&:focus-visible { outline: 2px solid var(--sb-primary); outline-offset: 1px; }
+}
+
+.sb-widget__chevron { transition: transform .2s ease; }
+.sb-widget__when-closed { display: none; }
+
+.sb-widget__body {
+	display: grid;
+	grid-template-rows: 1fr;
+	transition: grid-template-rows .2s ease, visibility 0s;
+}
+
+.sb-widget__inner {
+	min-height: 0;
+	overflow: hidden;
+}
+
+html.sb-collapsed {
+	.sb-widget {
+		padding-block: 10px;
+
+		@media (hover: hover) {
+			&:hover { background: var(--sb-tint); }
+		}
+	}
+
+	.sb-widget__head { margin-bottom: 0; }
+
+	// The whole collapsed card is the button.
+	.sb-widget__toggle {
+		&::after {
+			content: "";
+			position: absolute;
+			inset: 0;
+			border-radius: inherit;
+		}
+
+		&:hover { background: transparent; }
+		&:focus-visible { outline: 0; }
+		&:focus-visible::after { outline: 2px solid var(--sb-primary); outline-offset: 2px; border-radius: var(--sb-radius); }
+	}
+
+	.sb-widget__chevron { transform: rotate(180deg); }
+	.sb-widget__when-open { display: none; }
+	.sb-widget__when-closed { display: inline; }
+
+	.sb-widget__body {
+		grid-template-rows: 0fr;
+		visibility: hidden;
+		transition: grid-template-rows .2s ease, visibility 0s .2s;
+	}
+}
+
+// Only the expand animation of the content and the tab below need a hint that the user clicked
+// (the class is set for a moment by public/shoutbox.js, never on page load).
+html.sb-collapse-anim:not(.sb-collapsed) .sb-widget__inner {
+	animation: sb-fade-in .2s ease;
+}
+
+// Large screens: when the widget is alone in the sidebar, the column gives its width back to the
+// page and keeps only a narrow vertical tab with the icon and the chat name.
+@media (min-width: 992px) {
+	html.sb-collapsed {
+		.row:has(> [data-widget-area="sidebar"] > .sb-widget:only-child),
+		.row:has(> [data-widget-area="sidebar"] > :only-child .sb-widget) {
+			flex-wrap: nowrap;
+
+			> :not([data-widget-area="sidebar"]) {
+				flex: 1 1 0%;
+				width: auto;
+				max-width: none;
+				min-width: 0;
+			}
+
+			> [data-widget-area="sidebar"] {
+				flex: 0 0 auto;
+				width: auto;
+				padding-left: 0;
+			}
+		}
+
+		[data-widget-area="sidebar"] > .sb-widget:only-child,
+		[data-widget-area="sidebar"] > :only-child .sb-widget {
+			width: 44px;
+			padding: 14px 0 10px;
+
+			.sb-widget__head {
+				flex-direction: column;
+				gap: 10px;
+			}
+
+			.sb-widget__title {
+				font-size: .9rem;
+				white-space: nowrap;
+				writing-mode: vertical-rl;
+			}
+
+			.sb-widget__online,
+			.sb-widget__body { display: none; }
+
+			.sb-widget__toggle { margin: 0; }
+			.sb-widget__chevron { transform: rotate(-90deg); }
+		}
+
+		&.sb-collapse-anim {
+			[data-widget-area="sidebar"] > .sb-widget:only-child,
+			[data-widget-area="sidebar"] > :only-child .sb-widget {
+				animation: sb-tab-in .2s ease;
+			}
+		}
+	}
+}
+
+@keyframes sb-fade-in {
+	from { opacity: 0; }
+}
+
+@keyframes sb-tab-in {
+	from { opacity: 0; transform: translateX(8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sb-widget,
+	.sb-widget__head,
+	.sb-widget__chevron,
+	html.sb-collapsed .sb-widget__body,
+	.sb-widget__body {
+		transition: none;
+	}
+
+	html.sb-collapse-anim .sb-widget,
+	html.sb-collapse-anim .sb-widget__inner {
+		animation: none !important;
+	}
 }

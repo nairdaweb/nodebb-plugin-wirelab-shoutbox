@@ -25,7 +25,8 @@ moderation log and mentions with notifications.
   it stays above a fixed bottom bar of the theme (e.g. Harmony's mobile navigation). Opening
   `/?shoutbox=open` opens the dock (used by mention notifications).
 - **Widget** with the three latest messages and a button that opens the dock. Put it in any widget
-  area (ACP → Extend → Widgets → *Shoutbox*), e.g. the sidebar of the categories page.
+  area (ACP → Extend → Widgets → *Shoutbox*), e.g. the sidebar of the categories page. Visitors can
+  collapse it; when it is alone in the sidebar, the page gets the full width back.
 - **Live** over the NodeBB websocket: new messages, deletions, mutes and the number of users online
   arrive without reloading. 50 messages on open, older ones on demand.
 - **Plain text with light formatting:** inline Markdown (`**bold**`, `*italic*` / `_italic_`,
@@ -129,6 +130,27 @@ automatically; any mute can be lifted early in the ACP (*Active mutes*).
 ACP → Extend → Widgets → *Shoutbox*. It shows the three latest messages (live) and a button that
 opens the dock, and renders nothing for users who cannot read the shoutbox.
 
+#### Collapsing
+
+The arrow in the widget header (*Collapse chat* / *Show chat*) folds the widget:
+
+- **Alone in the sidebar** (screens 992 px and wider): the sidebar column disappears, the category
+  or topic list takes the full width and a narrow tab with the chat icon and name stays at the right
+  edge. Clicking the tab brings the widget and the layout back.
+- **With other widgets in the sidebar**, and on phones and tablets (where the sidebar sits below the
+  content): only the widget folds, to a single line with its name; the column stays.
+
+The choice is kept per browser in `localStorage` (key `sb:widget-collapsed`) and applied before the
+first paint by a tiny inline script the plugin adds to `<head>` through the custom HTML slot of the
+header (`filter:middleware.renderHeader`; the ACP custom HTML is kept), so the page does not jump on
+load. With storage blocked (some private modes) the widget still collapses for the current page.
+The dock and its corner button are not affected.
+
+The button has `aria-expanded` / `aria-controls` and keeps focus; the animation is short and off with
+`prefers-reduced-motion`. Detecting "alone in the sidebar" uses CSS `:has()` and works with the
+`[data-widget-area="sidebar"]` column of Harmony and themes based on it; without `:has()` the widget
+just folds to one line.
+
 ## Privileges
 
 Three global privileges (**ACP → Privileges → Global**):
@@ -179,6 +201,9 @@ Colours are CSS custom properties on `.sb-root` (dock) and `.sb-widget`:
 By default they follow Bootstrap's variables (`--bs-body-bg`, `--bs-primary`, …), so light and dark
 mode work with Harmony and other Bootstrap themes. The author's own theme defines `--wl-*` tokens,
 which are read first when present; other themes can ignore them.
+
+The collapsed state is the `sb-collapsed` class on `<html>`; style `html.sb-collapsed .sb-widget` to
+change the folded look.
 
 ### Data
 

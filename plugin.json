@@ -7,7 +7,8 @@
 		{ "hook": "static:privileges.global.init", "method": "addPrivileges" },
 		{ "hook": "filter:admin.header.build", "method": "addAdminNavigation" },
 		{ "hook": "filter:widgets.getWidgets", "method": "defineWidgets" },
-		{ "hook": "filter:widget.render:shoutbox", "method": "renderWidget" }
+		{ "hook": "filter:widget.render:shoutbox", "method": "renderWidget" },
+		{ "hook": "filter:middleware.renderHeader", "method": "addHeadScript" }
 	],
 	"scss": ["scss/shoutbox.scss"],
 	"scripts": ["public/shoutbox.js"],

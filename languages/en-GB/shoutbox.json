@@ -63,6 +63,8 @@
 	"notif.mention": "<strong>%1</strong> mentioned you in the chat",
 	"widget.title": "Live",
 	"widget.empty": "All quiet. Start the conversation.",
+	"widget.collapse": "Collapse chat",
+	"widget.expand": "Show chat",
 	"widget.acp-help": "Shows the 3 latest messages and opens the chat.",
 	"priv.read": "Shoutbox: read",
 	"priv.write": "Shoutbox: write",

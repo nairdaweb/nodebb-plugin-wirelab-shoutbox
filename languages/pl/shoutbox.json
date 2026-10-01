@@ -63,6 +63,8 @@
 	"notif.mention": "<strong>%1</strong> wspomniał(a) o Tobie w czacie",
 	"widget.title": "Na żywo",
 	"widget.empty": "Jeszcze cisza. Zacznij rozmowę.",
+	"widget.collapse": "Zwiń czat",
+	"widget.expand": "Pokaż czat",
 	"widget.acp-help": "Pokazuje 3 ostatnie wiadomości i otwiera czat.",
 	"priv.read": "Shoutbox: czytanie",
 	"priv.write": "Shoutbox: pisanie",
