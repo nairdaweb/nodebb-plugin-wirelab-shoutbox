@@ -100,5 +100,11 @@
 	"acp.action.mute": "mute",
 	"acp.action.unmute": "unmute",
 	"acp.action.delete": "message deleted",
-	"acp.unmuted": "Mute removed."
+	"acp.unmuted": "Mute removed.",
+	"update.available": "Version %1 is available",
+	"update.notes": "what's new",
+	"update.private": "update it with the deployment script",
+	"update.check": "Check for updates",
+	"update.check-help": "Once a day the forum fetches the latest version number of this plugin from updates.wirelab.pl: a plain GET request, nothing about the forum is sent. When this is off, no requests are made.",
+	"update.saved": "Update check setting saved"
 }

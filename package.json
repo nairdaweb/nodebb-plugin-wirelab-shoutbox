@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-wirelab-shoutbox",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Live shoutbox for NodeBB 4: a dock on every page (bottom sheet on phones) and a widget over the NodeBB websocket. Global read/write/moderate privileges, writing rules, mutes with a moderation log, mentions with notifications, emoji, optional rank-badges integration; translated (en-GB, pl).",
   "main": "library.js",
   "license": "MIT",

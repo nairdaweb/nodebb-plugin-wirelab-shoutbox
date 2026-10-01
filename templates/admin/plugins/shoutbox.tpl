@@ -5,6 +5,17 @@
 <div class="acp-page-container">
 	<!-- IMPORT admin/partials/settings/header.tpl -->
 
+	{{{ if updateAvailable }}}
+	<div class="alert alert-info" role="status">
+		<span>{{tx("shoutbox:update.available", updateVersion)}}</span>
+		{{{ if updateIsPrivate }}}
+		<span>— {{tx("shoutbox:update.private")}}</span>
+		{{{ else }}}{{{ if updateNotesUrl }}}
+		<span>— <a href="{updateNotesUrl}" target="_blank" rel="noopener noreferrer">{{tx("shoutbox:update.notes")}}</a></span>
+		{{{ end }}}{{{ end }}}
+	</div>
+	{{{ end }}}
+
 	<div class="row m-0">
 		<div id="spy-container" class="col-12 px-0 mb-4 d-flex flex-column gap-4" tabindex="0">
 			<p class="text-muted mb-0">{{tx("shoutbox:acp.fixed", limits.maxLength, limits.initialCount, limits.retentionDays, limits.retentionMax)}}</p>
@@ -109,5 +120,15 @@
 				{{{ end }}}
 			</section>
 		</div>
+	</div>
+	<!-- "Check for updates" (lib/update-check.js), own settings hash, saved on change by public/admin.js -->
+	<div class="row m-0">
+		<form role="form" class="wl-update-check col-12 px-0 mb-4 pt-3 border-top" data-hash="{updateSettingsHash}">
+			<div class="form-check form-switch mb-1">
+				<input type="checkbox" class="form-check-input" id="sb-check-updates" name="checkUpdates" checked aria-describedby="sb-check-updates-help">
+				<label for="sb-check-updates" class="form-check-label">{{tx("shoutbox:update.check")}}</label>
+			</div>
+			<p class="form-text" id="sb-check-updates-help">{{tx("shoutbox:update.check-help")}}</p>
+		</form>
 	</div>
 </div>

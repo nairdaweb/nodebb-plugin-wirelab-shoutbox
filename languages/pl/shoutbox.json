@@ -100,5 +100,11 @@
 	"acp.action.mute": "wyciszenie",
 	"acp.action.unmute": "zdjęcie wyciszenia",
 	"acp.action.delete": "usunięcie wiadomości",
-	"acp.unmuted": "Wyciszenie zdjęte."
+	"acp.unmuted": "Wyciszenie zdjęte.",
+	"update.available": "Dostępna wersja %1",
+	"update.notes": "co nowego",
+	"update.private": "zaktualizuj skryptem wdrożenia",
+	"update.check": "Sprawdzaj aktualizacje",
+	"update.check-help": "Raz na dobę forum pobiera z updates.wirelab.pl numer najnowszej wersji tego pluginu: zwykłe zapytanie GET, bez wysyłania żadnych danych o forum. Gdy wyłączone, nie ma żadnych zapytań.",
+	"update.saved": "Zapisano ustawienie sprawdzania aktualizacji"
 }

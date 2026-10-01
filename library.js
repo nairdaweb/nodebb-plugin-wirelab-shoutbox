@@ -32,8 +32,17 @@ const format = require('./lib/format');
 const store = require('./lib/store');
 const collapse = require('./lib/collapse');
 const { BASE_OPTIONS: RATE_LIMIT, onPageLimit } = require('./lib/rate-limit');
+const updateCheck = require('./lib/update-check');
 
 const SETTINGS_KEY = 'shoutbox';
+
+// Update notices on the ACP page (lib/update-check.js); public plugin, with a link to the release notes.
+const updates = updateCheck.forNodeBB({
+	id: 'nodebb-plugin-wirelab-shoutbox',
+	version: require('./package.json').version,
+	isPrivate: false,
+	settingsHash: `${SETTINGS_KEY}-update-check`,
+});
 const ROOM = 'shoutbox';
 const PRIVS = ['shoutbox:read', 'shoutbox:write', 'shoutbox:moderate'];
 const PRUNE_EVERY = 10 * 60 * 1000;
@@ -412,6 +421,7 @@ async function renderAdmin(req, res) {
 			atISO: new Date(parseInt(l.at, 10)).toISOString(),
 		})),
 		logCount,
+		...(await updates.templateData()),
 	});
 }
 
@@ -464,6 +474,7 @@ plugin.init = async function ({ router }) {
 	await loadSettings();
 	pubsub.on(`action:settings.set.${SETTINGS_KEY}`, () => loadSettings().catch(err => winston.warn(`[shoutbox] settings: ${err.message}`)));
 	await ensureDefaultPrivileges();
+	updates.start();
 
 	SocketPlugins.shoutbox = api;
 	SocketAdmin.plugins = SocketAdmin.plugins || {};
