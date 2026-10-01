@@ -167,6 +167,8 @@ moderate. Users without `shoutbox:read` do not see the dock or the widget.
 
 ## Security notes
 
+**Review and scanning.** Every release runs the unit tests and the linter. In October 2026 the code went through an independent code review and a Snyk Code scan; all reported issues were fixed, and the scan showed no open findings at that time. This is a point-in-time result, not a guarantee. Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
+
 - Messages are stored as plain text and rendered to HTML on the server. Everything is escaped; the
   only markup added is inline formatting, line breaks, links to existing users for `@mentions` and
   http(s) links with `rel="nofollow ugc noopener noreferrer"`. Control characters, bidi overrides and
